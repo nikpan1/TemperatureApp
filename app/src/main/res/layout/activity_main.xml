@@ -7,69 +7,94 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/PlotCanvas"
-        android:layout_width="388dp"
-        android:layout_height="260dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="135dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_launcher_background"
-        tools:layout_editor_absoluteX="30dp" />
-
     <LinearLayout
-        android:layout_width="253dp"
-        android:layout_height="248dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="472dp">
+        android:layout_width="696dp"
+        android:layout_height="376dp"
+        android:orientation="horizontal"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="16dp">
 
-        <Button
-            android:id="@+id/StopButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Stop" />
+        <ImageView
+            android:id="@+id/PlotCanvas"
+            android:layout_width="436dp"
+            android:layout_height="286dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="135dp"
+            app:srcCompat="@drawable/ic_launcher_background" />
 
-        <Button
-            android:id="@+id/StartButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Start" />
+        <LinearLayout
+            android:layout_width="253dp"
+            android:layout_height="376dp"
+            android:layout_margin="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginLeft="2px"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="2px"
+            android:layout_marginRight="2dp"
+            android:layout_marginBottom="2px"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/SamplingTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sampling Frequency" />
+            <Button
+                android:id="@+id/StopButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop" />
 
-        <TextView
-            android:id="@+id/SamplingTextArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="0" />
+            <Button
+                android:id="@+id/StartButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start" />
 
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/SamplingTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sampling Frequency"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/FrequencyTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Frequency [kHz]" />
+            <TextView
+                android:id="@+id/SamplingTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0" />
 
-        <TextView
-            android:id="@+id/FrequencyTextArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="0" />
+            <com.google.android.material.slider.Slider
+                android:id="@+id/SamplingSlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-        <SeekBar
-            android:id="@+id/seekBar2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/FrequencyTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Frequency [kHz]"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/FrequencyTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/FrequencySlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/MaxTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Max Y"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/MaxTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="41dp"
+                android:text="0" />
+
+        </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
