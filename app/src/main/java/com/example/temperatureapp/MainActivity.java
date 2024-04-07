@@ -18,14 +18,15 @@ import com.google.android.material.slider.Slider;
 public class MainActivity extends AppCompatActivity
 {
 
-    int samplingFrequency = 6000;
+    int sampling = 6000;
     int frequency = 2800;
     int hanningSize = 2048;
 
     double[] x, y, amplitudes;
     double Y_MAX = 0;
+    int startPos = 510;
 
-    ImageView iv;
+    ImageView imageview;
     Bitmap bitmap;
     Canvas canvas;
     Paint paint;
@@ -45,11 +46,11 @@ public class MainActivity extends AppCompatActivity
         y = new double[hanningSize];
         amplitudes = new double[hanningSize /2];
 
-        iv = this.findViewById(R.id.PlotCanvas);
+        imageview = this.findViewById(R.id.PlotCanvas);
         bitmap = Bitmap.createBitmap(hanningSize /2,520,Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
         paint = new Paint();
-        iv.setImageBitmap(bitmap);
+        imageview.setImageBitmap(bitmap);
         canvas.drawColor(Color.RED);
 
         Button buttonStart = findViewById(R.id.StartButton);
@@ -59,25 +60,28 @@ public class MainActivity extends AppCompatActivity
         maxTextArea = findViewById(R.id.MaxTextArea);
         SamplingTextArea = findViewById(R.id.SamplingTextArea);
         FrequencyTextArea = findViewById(R.id.FrequencyTextArea);
+
+        canvas.drawColor(Color.WHITE);
+
         buttonStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v)
             {
-                ComputeAmpl();
+                CalculateAmplitude();
                 DrawChart();
             }
         });
         buttonStop.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v)
             {
-                canvas.drawColor(Color.BLACK);
+                canvas.drawColor(Color.WHITE);
             }
         });
 
         FSslider.addOnChangeListener(new Slider.OnChangeListener() {
             @Override
             public void onValueChange(Slider slider, float value, boolean fromUser) {
-                samplingFrequency = (int)value;
-                SamplingTextArea.setText("samplingFrequency: " + samplingFrequency);
+                sampling = (int)value;
+                SamplingTextArea.setText(sampling);
             }
         });
 
@@ -85,7 +89,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onValueChange(Slider slider, float value, boolean fromUser) {
                 frequency = (int)value;
-                FrequencyTextArea.setText("F: " + frequency);
+                FrequencyTextArea.setText(frequency);
             }
         });
 
@@ -96,36 +100,35 @@ public class MainActivity extends AppCompatActivity
     {
         for(int i = 0; i< hanningSize; i++)
         {
-            x[i] = Math.sin(2*Math.PI* frequency *((double)i/samplingFrequency));
+            x[i] = Math.sin(2 * Math.PI * frequency * ((double)i / sampling));
             y[i] = 0;
         }
     }
 
-    public void ComputeAmpl()
+    public void CalculateAmplitude()
     {
         GenerateSignal();
         _fft.fft(x,y);
+
         Y_MAX =0;
-        for(int i = 0; i< hanningSize /2; i++)
+
+        for(int i = 0; i < hanningSize / 2; i ++)
         {
-            amplitudes[i]=x[i]*x[i]+y[i]*y[i];
-            if(amplitudes[i]> Y_MAX) Y_MAX = amplitudes[i];
+            amplitudes[i] = (x[i] * x[i]) + (y[i] * y[i]);
+            if(amplitudes[i]> Y_MAX) Y_MAX = amplitudes[i];   // store the max value
         }
-        for(int i = 0; i< hanningSize /2; i++)
-        {
-            amplitudes[i]= amplitudes[i]*500/ Y_MAX;
-        }
-        maxTextArea.setText("Value: " + Y_MAX);
+
+        for(int i = 0; i < hanningSize / 2; i ++)
+            amplitudes[i]= amplitudes[i] * (500 / Y_MAX);
+
+        maxTextArea.setText(Y_MAX + " ");
     }
     public void DrawChart()
     {
-        canvas.drawColor(Color.BLACK);
-        paint.setColor(Color.GREEN);
-        for(int i = 0; i< amplitudes.length; i++)
-        {
-            int downy = 510;
-            int upy = 510 - (int) amplitudes[i];
-            canvas.drawLine(i,downy,i,upy,paint);
-        }
+        paint.setColor(Color.RED);
+        canvas.drawColor(Color.WHITE);
+
+        for (int p = 0; p < amplitudes.length; p++)
+            canvas.drawLine(p, startPos, p, startPos - (int) amplitudes[p], paint);
     }
 }
