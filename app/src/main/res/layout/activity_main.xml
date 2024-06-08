@@ -8,23 +8,18 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:layout_width="696dp"
-        android:layout_height="376dp"
+        android:id="@+id/linearLayout"
+        android:layout_width="366dp"
+        android:layout_height="379dp"
+        android:layout_marginBottom="16dp"
         android:orientation="horizontal"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="16dp">
-
-        <ImageView
-            android:id="@+id/PlotCanvas"
-            android:layout_width="436dp"
-            android:layout_height="286dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="135dp"
-            app:srcCompat="@drawable/ic_launcher_background" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
-            android:layout_width="253dp"
-            android:layout_height="376dp"
+            android:layout_width="369dp"
+            android:layout_height="379dp"
             android:layout_margin="2dp"
             android:layout_marginStart="2dp"
             android:layout_marginLeft="2px"
@@ -34,30 +29,21 @@
             android:layout_marginBottom="2px"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/StopButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Stop" />
-
-            <Button
-                android:id="@+id/StartButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Start" />
-
             <TextView
                 android:id="@+id/SamplingTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Sampling Frequency"
+                android:textAlignment="center"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/SamplingTextArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:text="0"
+                android:textAlignment="center"
+                android:textAllCaps="false" />
 
             <com.google.android.material.slider.Slider
                 android:id="@+id/SamplingSlider"
@@ -69,13 +55,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Frequency [kHz]"
+                android:textAlignment="center"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/FrequencyTextArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:text="0"
+                android:textAlignment="center" />
 
             <com.google.android.material.slider.Slider
                 android:id="@+id/FrequencySlider"
@@ -83,18 +71,60 @@
                 android:layout_height="wrap_content" />
 
             <TextView
-                android:id="@+id/MaxTextView"
+                android:id="@+id/TemperatureTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Max Y"
+                android:textAlignment="center"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/MaxTextArea"
+                android:id="@+id/maxTextArea"
                 android:layout_width="match_parent"
                 android:layout_height="41dp"
-                android:text="0" />
+                android:text="0"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/TemperatureTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Temperature"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/temperatureTextArea"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:text="0"
+                android:textAlignment="center" />
+
+            <Button
+                android:id="@+id/StartButton"
+                android:layout_width="369dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5px"
+                android:layout_marginStart="5px"
+                android:layout_marginLeft="5px"
+                android:layout_marginTop="5px"
+                android:layout_marginEnd="5px"
+                android:layout_marginRight="5px"
+                android:layout_marginBottom="5px"
+                android:text="Start" />
 
         </LinearLayout>
+
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/PlotCanvas"
+        android:layout_width="376dp"
+        android:layout_height="376dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_launcher_background" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
