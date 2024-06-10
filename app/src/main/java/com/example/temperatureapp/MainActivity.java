@@ -1,134 +1,115 @@
 package com.example.temperatureapp;
 
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.os.Debug;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import com.google.android.material.slider.Slider;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity
 {
-
-    int sampling = 6000;
-    int frequency = 2800;
-    int hanningSize = 2048;
-
-    double[] x, y, amplitudes;
-    double Y_MAX = 0;
-    int startPos = 510;
-
-    ImageView imageview;
-    Button buttonStart;
-    Slider samplingSlider, frequencySlider;
-    TextView maxTextArea, temperatureTextArea, SamplingTextArea, FrequencyTextArea;
-
-    Bitmap bitmap;
-    Canvas canvas;
-    Paint paint;
-
-
-    FFT _fft = new FFT(hanningSize);
+    public static final int a = 120, b = 22;
+    public int sampling = 6000, frequency = 2800, probeWindowSize = 2048, startPos = 510;
     double temperature = 0;
-    Boolean startClicked = false;
-    String[] buttonTexts = {"Start", "Stop"};
-    int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
-    int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-    int audioMediatype = MediaRecorder.AudioSource.MIC;
 
-    private AudioRecord recorder;
-    private boolean isRecording = false;
+
+    int avgWindow = 25;
+    double[] readings = new double[avgWindow];
+    public double[] x = new double[probeWindowSize];
+    public double[] y = new double[probeWindowSize];
+    public double[] amplitudes = new double[probeWindowSize / 2];
+
+    public Boolean startClicked = false;
+
+
+    public ImageView imageview;
+    public Button buttonStart;
+    public Slider samplingSlider, frequencySlider;
+    public TextView maxTextArea, temperatureTextArea, SamplingTextArea, FrequencyTextArea;
+
+
+    private Object lock = new Object();
     private Thread recordingThread, drawingThread;
-    boolean isDataReady = false;
+    FFT fft = new FFT(probeWindowSize);
+    ChartDrawer chartDrawer;
+    AudioHandler audioHandler;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        x = new double[hanningSize];
-        y = new double[hanningSize];
-        amplitudes = new double[hanningSize /2];
-
-        imageview = this.findViewById(R.id.PlotCanvas);
-        bitmap = Bitmap.createBitmap(hanningSize /2,664,Bitmap.Config.ARGB_8888); // was earlier 520
-        canvas = new Canvas(bitmap);
-        paint = new Paint();
-        imageview.setImageBitmap(bitmap);
-        canvas.drawColor(Color.RED);
-
+        imageview = findViewById(R.id.PlotCanvas);
         buttonStart = findViewById(R.id.StartButton);
-        samplingSlider = findViewById(R.id.SamplingSlider);
-        frequencySlider = findViewById(R.id.FrequencySlider);
+
         maxTextArea = findViewById(R.id.maxTextArea);
-        SamplingTextArea = findViewById(R.id.SamplingTextArea);
         FrequencyTextArea = findViewById(R.id.FrequencyTextArea);
         maxTextArea = findViewById(R.id.maxTextArea);
         temperatureTextArea = findViewById(R.id.temperatureTextArea);
 
-        canvas.drawColor(Color.DKGRAY);
-        buttonStart.setText(buttonTexts[0]);
-
-
+        frequencySlider = findViewById(R.id.FrequencySlider);
         frequencySlider.setValueFrom(0.0f);
         frequencySlider.setValueTo(10000.0f);
         frequencySlider.setValue((float) frequency);
+        FrequencyTextArea = findViewById(R.id.FrequencyTextArea);
         FrequencyTextArea.setText(String.valueOf(frequency));
 
+        samplingSlider = findViewById(R.id.SamplingSlider);
         samplingSlider.setValueFrom(0.0f);
         samplingSlider.setValueTo(10000.0f);
         samplingSlider.setValue((float) sampling);
+        SamplingTextArea = findViewById(R.id.SamplingTextArea);
         SamplingTextArea.setText(String.valueOf(sampling));
+
+        // fill all arrays with zeros
+        Arrays.fill(x, 0);
+        Arrays.fill(y, 0);
+        Arrays.fill(amplitudes, 0);
+        Arrays.fill(readings, 0);
+
+
+        // initializing chart and audio handler
+        chartDrawer = new ChartDrawer(imageview, probeWindowSize);
+        audioHandler = new AudioHandler(this, this, lock, sampling, probeWindowSize, x);
 
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v)
             {
-                drawingThread = new Thread(() -> {
-                    DrawChart();
-                    while(startClicked) {
-                        if(isDataReady) {
-                            DrawChart();
-                        }
-                    }
-                });
-
                 startClicked = !startClicked;
-                buttonStart.setText(buttonTexts[startClicked ? 1 : 0]);
+                buttonStart.setText(startClicked ? "Stop" : "Start");
 
-                if(startClicked) {
-                    startRecording();
-                    drawingThread.start();
+                if(startClicked)
+                {
+                    recordingThread = new Thread(audioHandler.runnable);
+                    audioHandler.startRecording();
+                    if(!recordingThread.isAlive()) recordingThread.start();
+
+                    drawingThread = new Thread(() -> MainLoop());
+                    if(!drawingThread.isAlive()) drawingThread.start();
                 }
-                else {
-                    stopRecording();
+                else
+                {
+                    audioHandler.stopRecording();
+                    if(recordingThread.isAlive()) recordingThread.interrupt();
+                    if(drawingThread.isAlive()) drawingThread.interrupt();
+
+                    try {
+                        recordingThread.join();
+                        drawingThread.join();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    recordingThread = null;
                     drawingThread = null;
                 }
-
-
-
             }
         });
 
@@ -147,134 +128,97 @@ public class MainActivity extends AppCompatActivity
                 FrequencyTextArea.setText(String.valueOf(frequency));
             }
         });
-
-
     }
 
-
-
-    public void CalculateAmplitude()
+    void MainLoop()
     {
-        //GenerateSignal();
-        // _fft.fft(x,y);
+        boolean firstRun = true;
+        double Y_MAX, avg;
 
-        _fft.fft(x, y);
-        Y_MAX = 0;
+        while (startClicked) {
+            synchronized (lock) {
+                // --------
 
-        // show only the first half of the generated fft
-        for(int i = 0; i < hanningSize / 2; i ++)
-        {
-            amplitudes[i] = (x[i] * x[i]) + (y[i] * y[i]);
-            if (amplitudes[i]> Y_MAX) Y_MAX = amplitudes[i];
-        }
+                //GenerateSignal();
+                amplitudes = CalculateAmplitude();
+                fft.fft(x, y);
 
-        // scale accordingly to the canvas
-        // avoiding Y_MAX = 0
-        for(int i = 0; i < hanningSize / 2; i ++)
-            amplitudes[i]= amplitudes[i] * ((canvas.getHeight() * 0.9) / (Y_MAX + 0.001));
-    }
+                Y_MAX = GetMaxAmplitude(amplitudes);
+                avg = MovingAverage(Y_MAX);
+                temperature = (a * avg) + b;
 
+                chartDrawer.DrawChart(amplitudes, Y_MAX);
 
-    public void DrawChart()
-    {
-        canvas.drawColor(Color.DKGRAY);
-        paint.setColor(Color.MAGENTA);
+                maxTextArea.setText(String.valueOf(Y_MAX));
+                temperatureTextArea.setText(String.valueOf(temperature));
 
-        int canvasWidth = canvas.getHeight() - 10;
+                // --------
+                lock.notify();
 
-        for (int p = 0; p < amplitudes.length; p++) {
-            canvas.drawLine(p, canvasWidth, p, canvasWidth - (int) amplitudes[p], paint);
-        }
-
-        //maxTextArea.setText(String.valueOf(Y_MAX));
-        //temperatureTextArea.setText(String.valueOf(temperature));
-    }
-
-
-
-    private void startRecording() {
-        // checks if permissions granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            String[] perms = {Manifest.permission.RECORD_AUDIO};
-            ActivityCompat.requestPermissions(this, perms, 0);
-        }
-
-        int bufferSize = AudioRecord.getMinBufferSize(sampling, channelConfiguration, audioEncoding);
-        recorder = new AudioRecord(audioMediatype, sampling, channelConfiguration, audioEncoding, bufferSize);
-
-        recorder.startRecording();
-        isRecording = true;
-
-
-        recordingThread = new Thread(() -> {
-            byte[] buffer = new byte[bufferSize];
-            while (isRecording) {
-                isDataReady = false;
-                int read = recorder.read(buffer, 0, buffer.length);
-                if (read > 0) {
-
-                    // normalize given output before fft
-                    for (int i = 0; i < hanningSize && i < read; i++) {
-                        x[i] = (double) buffer[i] / 32768.0;
-                    }
-                    CalculateAmplitude();
-
+                // Wait for the first thread to complete
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
 
-                isDataReady = true;
-
-                int aSize = 5;
-                double [] readings = new double[aSize];
-                double avg = 0;
-
-                for (int i = 0; i < readings.length - 1; i++) {
-                    readings[i] = readings[i + 1];
-                }
-
-                readings[readings.length - 1] = Y_MAX;
-
-                for (int i = 0; i < readings.length; i ++)
-                {
-                    avg += readings[i];
-                }
-                temperature = (int)((avg/ aSize) * 1000);
-
-                // thread sleep needs to be in try catch
-                try
-                {
-                    Thread.sleep(1000);
-                } catch (Exception e)
-                {
-                    break;
+                // Sleep to give the second thread a chance to run
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-        });
-
-        recordingThread.start();
-    }
-
-
-    private void stopRecording() {
-        if (recorder != null) {
-            isRecording = false;
-            recorder.stop();
-            recorder.release();
-            recorder = null;
-            recordingThread = null;
         }
     }
 
+    private double[] CalculateAmplitude()
+    {
+        // we are interested only in the first half of the array
+        for(int i = 0; i < probeWindowSize / 2; i ++)
+        {
+            amplitudes[i] = (x[i] * x[i]) + (y[i] * y[i]);
+        }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopRecording();  // Ensure recording is stopped
+        return amplitudes;
     }
 
-    public void GenerateSignal()
+    private double GetMaxAmplitude(double[] amps)
     {
-        for(int i = 0; i < hanningSize; i++)
+        double result = 0;
+        for(int i = 0; i < probeWindowSize / 2; i ++)
+        {
+            if (amps[i]> result) result = amps[i];
+        }
+        return result;
+    }
+
+
+
+    private double MovingAverage(double newValue)
+    {
+        double sum = 0;
+
+        // shift the array to the left
+        for (int i = 0; i < readings.length - 1; i++) {
+            readings[i] = readings[i + 1];
+        }
+
+        // add the new value to the end
+        readings[readings.length - 1] = newValue;
+
+        // calculate the latest average
+        for (double reading : readings) {
+            sum += reading;
+        }
+
+        return sum / readings.length;
+    }
+
+    // this was used only for testing purposes
+    private void GenerateSignal()
+    {
+        for(int i = 0; i < probeWindowSize; i ++)
         {
             x[i] = Math.sin(2 * Math.PI * frequency * ((double)i / sampling));
             y[i] = 0;
