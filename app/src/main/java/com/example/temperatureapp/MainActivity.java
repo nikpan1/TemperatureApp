@@ -13,11 +13,11 @@ import android.util.Log;
 public class MainActivity extends AppCompatActivity
 {
     public static final double a = -3622566.8654117114, b = 918.16;
-    public int sampling = 6000, frequency = 2800, probeWindowSize = 2048, startPos = 510;
+    public int sampling = 12000, frequency = 2800, probeWindowSize = 2048, startPos = 510;
     double temperature = 0;
 
 
-    int avgWindow = 25;
+    int avgWindow = 10;
     double[] readings = new double[avgWindow];
     public double[] x = new double[probeWindowSize];
     public double[] y = new double[probeWindowSize];
@@ -55,14 +55,14 @@ public class MainActivity extends AppCompatActivity
 
         frequencySlider = findViewById(R.id.FrequencySlider);
         frequencySlider.setValueFrom(0.0f);
-        frequencySlider.setValueTo(10000.0f);
+        frequencySlider.setValueTo(16000.0f);
         frequencySlider.setValue((float) frequency);
         FrequencyTextArea = findViewById(R.id.FrequencyTextArea);
         FrequencyTextArea.setText(String.valueOf(frequency));
 
         samplingSlider = findViewById(R.id.SamplingSlider);
         samplingSlider.setValueFrom(0.0f);
-        samplingSlider.setValueTo(10000.0f);
+        samplingSlider.setValueTo(16000.0f);
         samplingSlider.setValue((float) sampling);
         SamplingTextArea = findViewById(R.id.SamplingTextArea);
         SamplingTextArea.setText(String.valueOf(sampling));
@@ -138,15 +138,14 @@ public class MainActivity extends AppCompatActivity
                 // --------
 
                 //GenerateSignal();
-                amplitudes = CalculateAmplitude();
                 fft.fft(x, y);
-
+                amplitudes = CalculateAmplitude();
                 Y_MAX = GetMaxAmplitude(amplitudes);
 
                 avg = MovingAverage(Y_MAX);
                 temperature = (a * avg) + b;
 
-                chartDrawer.DrawChart(amplitudes, Y_MAX);
+                chartDrawer.DrawChart(amplitudes);
                 maxTextArea.setText(String.valueOf(Y_MAX));
                 temperatureTextArea.setText(String.valueOf(temperature));
 
@@ -162,7 +161,7 @@ public class MainActivity extends AppCompatActivity
 
                 // Sleep to give the second thread a chance to run
                 try {
-                    Thread.sleep(250);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -186,7 +185,7 @@ public class MainActivity extends AppCompatActivity
         double result = 0;
         for(int i = 0; i < probeWindowSize / 2; i ++)
         {
-            if (amps[i]> result) result = amps[i];
+            if (amps[i] > result) result = amps[i];
         }
         return result;
     }

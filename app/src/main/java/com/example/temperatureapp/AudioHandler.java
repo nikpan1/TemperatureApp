@@ -22,7 +22,7 @@ public class AudioHandler {
 
     int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-    int audioMediatype = MediaRecorder.AudioSource.MIC;
+    int audioMediatype = MediaRecorder.AudioSource.DEFAULT;
     private AudioRecord recorder;
 
 
@@ -57,7 +57,7 @@ public class AudioHandler {
             ActivityCompat.requestPermissions(activity, perms, 0);
         }
 
-        int bufferSize = AudioRecord.getMinBufferSize(sampling, channelConfiguration, audioEncoding);
+        int bufferSize = AudioRecord.getMinBufferSize(12000, 16, audioEncoding);
         recorder = new AudioRecord(audioMediatype, sampling, channelConfiguration, audioEncoding, bufferSize);
 
         recorder.startRecording();
@@ -77,13 +77,10 @@ public class AudioHandler {
 
     public void recording()
     {
-        byte[] buffer = new byte[probeWindowSize];
-        Arrays.fill(buffer, (byte) 0);
-
         while (isRecording) {
             synchronized (lock) {
                 // --------
-                readData(buffer);
+                readData();
                 // --------
 
                 lock.notify();
@@ -97,7 +94,7 @@ public class AudioHandler {
 
                 // Sleep to give the second thread a chance to run
                 try {
-                    Thread.sleep(250);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -106,8 +103,11 @@ public class AudioHandler {
     }
 
 
-    private void readData(byte[] buffer)
+    private void readData()
     {
+        byte[] buffer = new byte[probeWindowSize];
+        Arrays.fill(buffer, (byte) 0);
+
         int read = recorder.read(buffer, 0, buffer.length);
         if (read > 0) {
             // normalize given output before fft

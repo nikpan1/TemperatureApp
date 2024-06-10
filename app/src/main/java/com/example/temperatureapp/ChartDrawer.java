@@ -13,9 +13,9 @@ public class ChartDrawer {
     ImageView imageview;
     int probeWindowSize;
 
-    public ChartDrawer(ImageView _imageView, int _hanningSize) {
+    public ChartDrawer(ImageView _imageView, int _probeWindowsSize) {
         imageview = _imageView;
-        probeWindowSize = _hanningSize;
+        probeWindowSize = _probeWindowsSize;
 
         paint = new Paint();
         bitmap = Bitmap.createBitmap( probeWindowSize / 2,664, Bitmap.Config.ARGB_8888);
@@ -26,14 +26,19 @@ public class ChartDrawer {
         imageview.setImageBitmap(bitmap);
     }
 
-    public Bitmap DrawChart(double[] amplitudes, double Y_MAX)
+    public Bitmap DrawChart(double[] amplitudes)
     {
+        double max = 0;
+        for (int i = 0; i < amplitudes.length; i ++) {
+            if(amplitudes[i] > max) max = amplitudes[i];
+        }
+
         canvas.drawColor(Color.DKGRAY);
         int canvasWidth = canvas.getHeight() - 10;
 
         // adjust to canvas size
         for(int i = 0; i < probeWindowSize / 2; i ++) {
-            amplitudes[i] = amplitudes[i] / (Y_MAX + Double.MIN_VALUE) * (canvasWidth - 16);
+            amplitudes[i] = amplitudes[i] / (max + Double.MIN_VALUE) * (canvasWidth - 16);
         }
 
         // drawing amplitudes
@@ -43,7 +48,7 @@ public class ChartDrawer {
         }
 
         // Drawing ticks
-        paint.setColor(Color.RED);
+        paint.setColor(Color.GREEN);
         for (int i = 0; i < amplitudes.length; i ++) {
             if (i % 32 == 0) {
                 canvas.drawLine(i, canvasWidth, i, canvasWidth - 8, paint);

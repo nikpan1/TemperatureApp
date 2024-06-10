@@ -1,7 +1,5 @@
 package com.example.temperatureapp;
 
-import java.util.Arrays;
-
 public class FFT
 {
     int n, m;
@@ -30,15 +28,17 @@ public class FFT
     }
 
     public void fft(double[] x, double[] y) {
+
+        for(int i=0;i<y.length;i++){
+            y[i]=0;
+        }
+
         int i, j, k, n1, n2, a;
         double c, s, t1, t2;
 
         // Bit-reverse
         j = 0;
         n2 = n / 2;
-
-        Arrays.fill(y, 0);
-
         for (i = 1; i < n - 1; i++) {
             n1 = n2;
             while (j >= n1) {
