@@ -9,10 +9,10 @@ import android.widget.TextView;
 import com.google.android.material.slider.Slider;
 
 import java.util.Arrays;
-
+import android.util.Log;
 public class MainActivity extends AppCompatActivity
 {
-    public static final int a = 120, b = 22;
+    public static final double a = -3622566.8654117114, b = 918.16;
     public int sampling = 6000, frequency = 2800, probeWindowSize = 2048, startPos = 510;
     double temperature = 0;
 
@@ -132,9 +132,7 @@ public class MainActivity extends AppCompatActivity
 
     void MainLoop()
     {
-        boolean firstRun = true;
         double Y_MAX, avg;
-
         while (startClicked) {
             synchronized (lock) {
                 // --------
@@ -144,11 +142,11 @@ public class MainActivity extends AppCompatActivity
                 fft.fft(x, y);
 
                 Y_MAX = GetMaxAmplitude(amplitudes);
+
                 avg = MovingAverage(Y_MAX);
                 temperature = (a * avg) + b;
 
                 chartDrawer.DrawChart(amplitudes, Y_MAX);
-
                 maxTextArea.setText(String.valueOf(Y_MAX));
                 temperatureTextArea.setText(String.valueOf(temperature));
 
