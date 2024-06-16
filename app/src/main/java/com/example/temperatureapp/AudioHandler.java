@@ -18,7 +18,6 @@ public class AudioHandler {
     Activity activity;
     Object lock;
     Runnable runnable;
-    Context context;
 
     int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
@@ -30,10 +29,9 @@ public class AudioHandler {
     int sampling, probeWindowSize;
     public double[] x;
 
-    public AudioHandler(Activity _activity, Context _context, Object _lock, int _sampling, int _probeWindowSize, double[] _x)
+    public AudioHandler(Activity _activity, Object _lock, int _sampling, int _probeWindowSize, double[] _x)
     {
         activity = _activity;
-        context = _context;
         lock = _lock;
 
         sampling = _sampling;
@@ -46,24 +44,31 @@ public class AudioHandler {
                 recording();
             }
         };
+
+        checkPermissions();
     }
 
 
     public void startRecording() {
-        // checks if permissions granted
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            String[] perms = {Manifest.permission.RECORD_AUDIO};
-            ActivityCompat.requestPermissions(activity, perms, 0);
-        }
-
-        int bufferSize = AudioRecord.getMinBufferSize(12000, 16, audioEncoding);
+        checkPermissions();
+        int bufferSize = AudioRecord.getMinBufferSize(sampling, channelConfiguration, audioEncoding);
         recorder = new AudioRecord(audioMediatype, sampling, channelConfiguration, audioEncoding, bufferSize);
 
-        recorder.startRecording();
-        isRecording = true;
+        if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+            recorder.startRecording();
+            isRecording = true;
+        } else {
+            Log.e("AudioHandler", "AudioRecord initialization failed");
+        }
     }
 
+    public void checkPermissions() {
+        // Check if permission is granted
+        if (ActivityCompat.checkSelfPermission(activity, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, new String[]{android.Manifest.permission.RECORD_AUDIO}, 0);
+            return; // Exit the function to wait for permission result
+        }
+    }
 
     public void stopRecording() {
         isRecording = false;

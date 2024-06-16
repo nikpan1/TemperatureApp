@@ -26,34 +26,38 @@ public class ChartDrawer {
         imageview.setImageBitmap(bitmap);
     }
 
-    public Bitmap DrawChart(double[] amplitudes)
+    public Bitmap DrawChart(double[] amplitudes, int thickness)
     {
         double max = 0;
-        for (int i = 0; i < amplitudes.length; i ++) {
-            if(amplitudes[i] > max) max = amplitudes[i];
+        for (int i = 0; i < amplitudes.length; i++) {
+            if (amplitudes[i] > max) max = amplitudes[i];
         }
 
         canvas.drawColor(Color.DKGRAY);
         int canvasWidth = canvas.getHeight() - 10;
 
-        // adjust to canvas size
-        for(int i = 0; i < probeWindowSize / 2; i ++) {
+        // Adjust to canvas size
+        for (int i = 0; i < probeWindowSize / 2; i++) {
             amplitudes[i] = amplitudes[i] / (max + Double.MIN_VALUE) * (canvasWidth - 16);
         }
 
-        // drawing amplitudes
+        // Drawing amplitudes
         paint.setColor(Color.MAGENTA);
-        for (int p = 0; p < amplitudes.length; p ++) {
+        paint.setStrokeWidth(thickness); // Set the thickness of the paint
+        for (int p = 0; p < amplitudes.length; p++) {
             canvas.drawLine(p, canvasWidth, p, canvasWidth - (int) amplitudes[p], paint);
         }
 
         // Drawing ticks
         paint.setColor(Color.GREEN);
-        for (int i = 0; i < amplitudes.length; i ++) {
+        paint.setStrokeWidth(1); // Set thickness for the ticks
+        for (int i = 0; i < amplitudes.length; i++) {
             if (i % 32 == 0) {
+                paint.setStrokeWidth(thickness); // Thicker tick
                 canvas.drawLine(i, canvasWidth, i, canvasWidth - 8, paint);
             }
             if (i % 128 == 0) {
+                paint.setStrokeWidth(thickness * 2); // Even thicker tick
                 canvas.drawLine(i, canvasWidth, i, canvasWidth - 32, paint);
             }
         }
@@ -61,3 +65,4 @@ public class ChartDrawer {
         return this.bitmap;
     }
 }
+

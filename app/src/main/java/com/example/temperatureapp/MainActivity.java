@@ -12,8 +12,8 @@ import java.util.Arrays;
 import android.util.Log;
 public class MainActivity extends AppCompatActivity
 {
-    public static final double a = -3622566.8654117114, b = 918.16;
-    public int sampling = 12000, frequency = 2800, probeWindowSize = 2048, startPos = 510;
+    public static final double a = -11.58, b = 43.56;
+    public int sampling = 12000, frequency = 5000, probeWindowSize = 2048, startPos = 510;
     double temperature = 0;
 
 
@@ -37,6 +37,9 @@ public class MainActivity extends AppCompatActivity
     FFT fft = new FFT(probeWindowSize);
     ChartDrawer chartDrawer;
     AudioHandler audioHandler;
+
+    double average = 0;
+    double avg_counter = 0;
 
 
     @Override
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity
 
         // initializing chart and audio handler
         chartDrawer = new ChartDrawer(imageview, probeWindowSize);
-        audioHandler = new AudioHandler(this, this, lock, sampling, probeWindowSize, x);
+        audioHandler = new AudioHandler(this, lock, sampling, probeWindowSize, x);
 
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
@@ -145,7 +148,13 @@ public class MainActivity extends AppCompatActivity
                 avg = MovingAverage(Y_MAX);
                 temperature = (a * avg) + b;
 
-                chartDrawer.DrawChart(amplitudes);
+                avg_counter++;
+                average += avg;
+
+                // print the current known average to logcat
+                Log.d("Average", String.valueOf(average / avg_counter));
+
+                chartDrawer.DrawChart(amplitudes, 4);
                 maxTextArea.setText(String.valueOf(Y_MAX));
                 temperatureTextArea.setText(String.valueOf(temperature));
 
